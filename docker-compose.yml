@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: p18_eco2mix_db
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+      POSTGRES_DB: eco2mix
+    ports:
+      # Hôte 5435 -> conteneur 5432 : 5432/5433/5434 déjà pris par d'autres projets.
+      - "5435:5432"
+    volumes:
+      - p18_pgdata:/var/lib/postgresql/data
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d eco2mix"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  p18_pgdata:
