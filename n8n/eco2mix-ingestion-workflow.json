@@ -1,0 +1,130 @@
+{
+  "name": "Eco2mix - ingestion 15min",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http",
+      "name": "Fetch RTE Eco2mix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://odre.opendatasoft.com/api/records/1.0/search/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "dataset",
+              "value": "eco2mix-national-tr"
+            },
+            {
+              "name": "rows",
+              "value": "8"
+            },
+            {
+              "name": "sort",
+              "value": "date_heure"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "code",
+      "name": "Build upsert SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "\nconst COLUMNS = [\"date_heure\",\"perimetre\",\"nature\",\"consommation\",\"eolien\",\"nucleaire\",\n                  \"hydraulique\",\"gaz\",\"bioenergies\",\"solaire\",\"charbon\",\"fioul\",\n                  \"taux_co2\",\"ech_physiques\"];\n\nfunction sqlLit(v) {\n  if (v === null || v === undefined) return \"NULL\";\n  if (typeof v === \"number\") return String(v);\n  return \"'\" + String(v).replace(/'/g, \"''\") + \"'\";\n}\n\nconst records = $input.first().json.records || [];\nconst rows = records.map(r => COLUMNS.map(c => sqlLit(r.fields[c] ?? null)));\nconst valuesSql = rows.map(r => \"(\" + r.join(\",\") + \")\").join(\",\\n\");\nconst updateCols = COLUMNS.filter(c => c !== \"date_heure\").map(c => `${c}=EXCLUDED.${c}`).join(\", \");\n\nconst upsertSql = rows.length === 0 ? \"\" : `\nINSERT INTO eco2mix_national_tr (${COLUMNS.join(\",\")})\nVALUES\n${valuesSql}\nON CONFLICT (date_heure) DO UPDATE SET ${updateCols}, ingested_at = now();\n`;\n\nconst logSql = `INSERT INTO ingestion_log (rows_fetched, status) VALUES (${rows.length}, 'success');`;\n\nreturn [{ json: { sql: upsertSql + \"\\n\" + logSql, rows_fetched: rows.length } }];\n"
+      }
+    },
+    {
+      "id": "pg",
+      "name": "Upsert Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "kGTmtYVp7VGjuyxf",
+          "name": "Supabase Eco2mix pool ssl-allow"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch RTE Eco2mix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RTE Eco2mix": {
+      "main": [
+        [
+          {
+            "node": "Build upsert SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build upsert SQL": {
+      "main": [
+        [
+          {
+            "node": "Upsert Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

@@ -1,6 +1,6 @@
 # Projet 18 — Monitoring temps réel du mix énergétique (RTE Eco2mix)
 
-> **🚧 En cours — Phase 3/7.** Cadrage complet dans l'issue
+> **🚧 En cours — Phase 4/7.** Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -44,6 +44,14 @@ l'analyse de données déjà là.
   **6/6 cas vérifiés** en se plaçant réellement dans la peau de chaque rôle
   (`SET ROLE`), pas juste déclaré — contrairement au Projet 11 où la
   gouvernance n'était que documentée.
+- **Ingestion automatisée en production** (`n8n/eco2mix-ingestion-workflow.json`) :
+  workflow n8n (schedule 15 min → HTTP RTE → upsert Supabase), déployé,
+  activé, **exécution réelle vérifiée** (log d'ingestion + données en base
+  après un run déclenché depuis n8n, pas juste "ça devrait marcher"). Trois
+  vrais problèmes d'infra rencontrés et résolus en cours de route —
+  [docs/pieges-infra.md](docs/pieges-infra.md) : Coolify HTTPS qui ne
+  persistait pas, IPv6 injoignable depuis le VPS vers Supabase (résolu via
+  le connection pooler), certificat rejeté par le nœud Postgres de n8n.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
@@ -81,8 +89,11 @@ projet-18-monitoring-energie-rte/
 ├── src/
 │   ├── ingest.py            ← poll API ODRE + upsert idempotent + log de chaque run
 │   └── test_rls.py          ← preuve RLS : SET ROLE anon/authenticated, 6 cas vérifiés
+├── n8n/
+│   └── eco2mix-ingestion-workflow.json  ← workflow exporté (schedule 15min -> RTE -> Supabase)
 └── docs/
-    └── pieges-api-rte.md    ← 2 comportements réels de l'API, vérifiés en direct
+    ├── pieges-api-rte.md    ← 2 comportements réels de l'API, vérifiés en direct
+    └── pieges-infra.md      ← 3 problèmes infra réels (Coolify/IPv6/TLS), résolus
 ```
 
 ## 🧠 Choix de conception notables
