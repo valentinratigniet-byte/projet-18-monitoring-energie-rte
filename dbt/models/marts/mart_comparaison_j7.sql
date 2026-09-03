@@ -3,6 +3,7 @@
 -- électrique, qui a un cycle hebdomadaire marqué (semaine vs week-end).
 select
     a.date_heure,
+    a.date_heure::date                                                    as date_mesure,
     a.consommation                                                        as consommation_actuelle,
     b.consommation                                                        as consommation_j7,
     round(a.consommation - b.consommation, 0)                             as ecart_absolu,

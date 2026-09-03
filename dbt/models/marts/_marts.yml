@@ -22,3 +22,12 @@ models:
     columns:
       - name: date_heure
         tests: [unique, not_null]
+
+  - name: dim_date
+    description: >
+      Dimension date générée (première mesure ingérée -> +2 ans), pour les
+      hiérarchies année/trimestre/mois côté BI. Relations vers date_mesure
+      sur les 3 marts.
+    columns:
+      - name: date
+        tests: [unique, not_null]

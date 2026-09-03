@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml/badge.svg)](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml)
 
-> **🚧 En cours — Phase 5/7.** Cadrage complet dans l'issue
+> **🚧 En cours — Phase 6/7.** Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -55,13 +55,14 @@ l'analyse de données déjà là.
   persistait pas, IPv6 injoignable depuis le VPS vers Supabase (résolu via
   le connection pooler), certificat rejeté par le nœud Postgres de n8n.
 - **Marts dbt** (`dbt/`) : staging (exclut les mesures pas encore
-  consolidées par RTE) → 3 marts — mix énergétique (% renouvelable/nucléaire
-  par mesure), pics de consommation quotidiens, comparaison J/J-7. **4
-  modèles + 11 tests, tous PASS**, vérifiés en local et contre le vrai
-  Supabase (chiffres plausibles : ~57-59 % renouvelable, ~74 % nucléaire,
-  10 gCO2/kWh sur la France début septembre 2026). CI ajoutée : seed
-  Postgres local → ingestion réelle → `dbt run`/`dbt test`, rejoué à chaque
-  push.
+  consolidées par RTE) → 3 marts (mix énergétique — % renouvelable/nucléaire
+  pondérés par mesure, pics de consommation quotidiens, comparaison J/J-7)
+  + `dim_date` (dimension date générée, réutilisable par n'importe quel
+  outil BI branché sur Supabase, pas seulement Power BI). **5 modèles + 13
+  tests, tous PASS**, vérifiés en local et contre le vrai Supabase (chiffres
+  plausibles : ~53-59 % renouvelable, ~74-75 % nucléaire, 10 gCO2/kWh sur la
+  France début septembre 2026). CI ajoutée : seed Postgres local → ingestion
+  réelle → `dbt run`/`dbt test`, rejoué à chaque push.
 - **Dashboard Metabase (vue ops)** — accès authentifié uniquement
   (https://metabase-htoahsxbuxhcghbubjvkueqz.76.13.43.130.sslip.io/, compte
   admin requis) : 5 cartes branchées sur les marts dbt (mix énergétique en
@@ -74,6 +75,16 @@ l'analyse de données déjà là.
   `ingestion_log` (explicitement admin-only) à n'importe qui. Une éventuelle
   vue publique devrait passer par une carte dédiée, connectée avec le rôle
   `anon`/`authenticated`, pas par ce dashboard admin.
+- **Rapport Power BI (vue exécutive)** — `dashboard-eco2mix.pbix`, construit
+  via le MCP `powerbi-modeling` (même toolchain que les Projets 01/09/13) :
+  modèle en étoile propre (3 marts + `dim_date`), 11 mesures DAX (dont des
+  **% pondérés par la consommation réelle**, pas de simples moyennes de
+  pourcentages — vérifié : les mesures naïves auraient été fausses),
+  hiérarchie Année/Trimestre/Mois/Jour explicite sur `dim_date` à la place
+  des tables de dates auto-générées par Power BI (une par colonne, jamais
+  réutilisables — supprimées). 2 pages : vue d'ensemble (mix en direct,
+  consommation, répartition) et pics/comparaison J-7. Thème "Petrol &
+  Ambre" du portfolio.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
@@ -109,6 +120,7 @@ dbt test
 ```
 projet-18-monitoring-energie-rte/
 ├── README.md
+├── dashboard-eco2mix.pbix   ← rapport Power BI (2 pages, thème Petrol & Ambre)
 ├── docker-compose.yml       ← Postgres local (dev), même schéma que la cible Supabase
 ├── sql/
 │   ├── 01_schema.sql        ← eco2mix_national_tr + ingestion_log (local + Supabase)
@@ -120,7 +132,7 @@ projet-18-monitoring-energie-rte/
 │   └── eco2mix-ingestion-workflow.json  ← workflow exporté (schedule 15min -> RTE -> Supabase)
 ├── dbt/
 │   ├── models/staging/stg_eco2mix.sql   ← exclut les mesures pas encore consolidées
-│   └── models/marts/                    ← mix énergétique, pics quotidiens, comparaison J/J-7
+│   └── models/marts/                    ← mix énergétique, pics quotidiens, comparaison J/J-7, dim_date
 └── docs/
     ├── pieges-api-rte.md    ← 2 comportements réels de l'API, vérifiés en direct
     └── pieges-infra.md      ← 3 problèmes infra réels (Coolify/IPv6/TLS), résolus
