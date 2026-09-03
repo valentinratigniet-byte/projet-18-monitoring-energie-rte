@@ -1,6 +1,6 @@
 # Projet 18 — Monitoring temps réel du mix énergétique (RTE Eco2mix)
 
-> **🚧 En cours — Phase 1/7.** Cadrage complet dans l'issue
+> **🚧 En cours — Phase 2/7.** Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -29,6 +29,14 @@ l'analyse de données déjà là.
   152 mesures ingérées, dont les 52 déjà consolidées par RTE correctement
   peuplées, le reste rattrapé automatiquement lors des polls suivants.
   Self-check d'idempotence inclus (ré-ingérer ne duplique jamais).
+- **Infra en production déployée et vérifiée** : VPS Hostinger KVM2 +
+  Coolify auto-hébergé, avec n8n et Metabase déployés dessus, tous les deux
+  en HTTPS avec un vrai certificat Let's Encrypt (vérifié en direct, pas
+  supposé).
+- **Supabase branché et validé en conditions réelles** : le schéma raw est
+  créé sur le vrai projet Supabase (pas seulement en local), et l'ingestion
+  a tourné dessus avec succès (150 mesures, idempotence vérifiée) — même
+  code que le local, seul `DATABASE_URL` change.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
