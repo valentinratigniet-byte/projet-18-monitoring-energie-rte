@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml/badge.svg)](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml)
 
-> **🚧 En cours — Phase 6/7.** Cadrage complet dans l'issue
+> **✅ Phase 7/7 — les 7 phases du cadrage sont terminées.** Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -85,6 +85,15 @@ l'analyse de données déjà là.
   réutilisables — supprimées). 2 pages : vue d'ensemble (mix en direct,
   consommation, répartition) et pics/comparaison J-7. Thème "Petrol &
   Ambre" du portfolio.
+- **Lignage branché sur [Filiation](https://github.com/valentinratigniet-byte/projet-14-filiation)** :
+  ce projet apparaît dans le jeu "Projet réel" de Filiation via 3 sources
+  fusionnées de façon additive — Supabase (7 tables, `scan_database.py`),
+  Power BI (11 mesures, `extract_powerbi.py`) et n8n (le workflow
+  d'ingestion, `extract_n8n.py`). Vérifié en rendu réel (Playwright), pas
+  seulement au retour des scripts. **Refresh quotidien automatisé** (6h
+  UTC, `refresh-eco2mix.yml` côté Filiation) : rescanne Supabase et
+  republie le lignage tout seul — testé manuellement, un commit bot réel
+  a suivi.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
