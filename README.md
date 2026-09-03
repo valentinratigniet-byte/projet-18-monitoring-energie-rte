@@ -1,6 +1,8 @@
 # Projet 18 — Monitoring temps réel du mix énergétique (RTE Eco2mix)
 
-> **🚧 En cours — Phase 4/7.** Cadrage complet dans l'issue
+[![CI](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml/badge.svg)](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml)
+
+> **🚧 En cours — Phase 5/7.** Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -52,6 +54,14 @@ l'analyse de données déjà là.
   [docs/pieges-infra.md](docs/pieges-infra.md) : Coolify HTTPS qui ne
   persistait pas, IPv6 injoignable depuis le VPS vers Supabase (résolu via
   le connection pooler), certificat rejeté par le nœud Postgres de n8n.
+- **Marts dbt** (`dbt/`) : staging (exclut les mesures pas encore
+  consolidées par RTE) → 3 marts — mix énergétique (% renouvelable/nucléaire
+  par mesure), pics de consommation quotidiens, comparaison J/J-7. **4
+  modèles + 11 tests, tous PASS**, vérifiés en local et contre le vrai
+  Supabase (chiffres plausibles : ~57-59 % renouvelable, ~74 % nucléaire,
+  10 gCO2/kWh sur la France début septembre 2026). CI ajoutée : seed
+  Postgres local → ingestion réelle → `dbt run`/`dbt test`, rejoué à chaque
+  push.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
@@ -75,6 +85,11 @@ projets du portfolio).
 docker compose up -d                # Postgres local, port 5435
 pip install -r requirements.txt
 python src/ingest.py --n 150        # ingère les dernières mesures + self-check idempotence
+
+cd dbt
+export DBT_PROFILES_DIR=.           # PGHOST/PGPORT/... par défaut = Postgres local ci-dessus
+dbt run
+dbt test
 ```
 
 ## 🗃️ Structure du repo
@@ -91,6 +106,9 @@ projet-18-monitoring-energie-rte/
 │   └── test_rls.py          ← preuve RLS : SET ROLE anon/authenticated, 6 cas vérifiés
 ├── n8n/
 │   └── eco2mix-ingestion-workflow.json  ← workflow exporté (schedule 15min -> RTE -> Supabase)
+├── dbt/
+│   ├── models/staging/stg_eco2mix.sql   ← exclut les mesures pas encore consolidées
+│   └── models/marts/                    ← mix énergétique, pics quotidiens, comparaison J/J-7
 └── docs/
     ├── pieges-api-rte.md    ← 2 comportements réels de l'API, vérifiés en direct
     └── pieges-infra.md      ← 3 problèmes infra réels (Coolify/IPv6/TLS), résolus

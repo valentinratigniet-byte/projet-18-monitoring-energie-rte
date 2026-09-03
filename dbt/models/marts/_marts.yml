@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: mart_mix_energetique
+    description: Une mesure consolidée = une ligne, avec la part renouvelable/nucléaire du moment.
+    columns:
+      - name: date_heure
+        tests: [unique, not_null]
+      - name: pct_renouvelable
+        tests: [not_null]
+
+  - name: mart_pics_quotidiens
+    description: Le pic de consommation de chaque jour, avec la part renouvelable à ce moment-là.
+    columns:
+      - name: date_mesure
+        tests: [unique, not_null]
+      - name: pic_consommation
+        tests: [not_null]
+
+  - name: mart_comparaison_j7
+    description: Chaque mesure comparée à la même heure 7 jours plus tôt.
+    columns:
+      - name: date_heure
+        tests: [unique, not_null]

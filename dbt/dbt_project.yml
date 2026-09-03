@@ -1,0 +1,16 @@
+name: eco2mix
+version: '1.0.0'
+config-version: 2
+
+profile: eco2mix
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  eco2mix:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: view

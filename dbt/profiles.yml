@@ -1,0 +1,13 @@
+eco2mix:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PGHOST', '127.0.0.1') }}"
+      port: "{{ env_var('PGPORT', '5435') | as_number }}"
+      user: "{{ env_var('PGUSER', 'portfolio') }}"
+      password: "{{ env_var('PGPASSWORD', 'portfolio') }}"
+      dbname: "{{ env_var('PGDATABASE', 'eco2mix') }}"
+      schema: public
+      sslmode: "{{ env_var('PGSSLMODE', 'prefer') }}"
+      threads: 4

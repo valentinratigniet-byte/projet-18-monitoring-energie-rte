@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: public
+    tables:
+      - name: eco2mix_national_tr
+        description: >
+          Mesures brutes du mix énergétique français, ingérées toutes les
+          15 min par le workflow n8n (voir ../../n8n/eco2mix-ingestion-workflow.json).
+          Une partie des lignes récentes (~24h) n'ont pas encore de mesure
+          consolidée par RTE — voir docs/pieges-api-rte.md à la racine du repo.
+        columns:
+          - name: date_heure
+            description: Horodatage de la mesure (clé, UTC)
+            tests: [unique, not_null]

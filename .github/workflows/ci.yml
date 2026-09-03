@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ingestion-et-dbt:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: portfolio
+          POSTGRES_PASSWORD: portfolio
+          POSTGRES_DB: eco2mix
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd "pg_isready -U portfolio -d eco2mix"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Charger le schéma
+        env:
+          PGPASSWORD: portfolio
+        run: psql -h localhost -p 5435 -U portfolio -d eco2mix -f sql/01_schema.sql
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt dbt-postgres
+
+      - name: Ingérer des données réelles (API RTE) + self-check idempotence
+        working-directory: src
+        env:
+          DATABASE_URL: "postgresql://portfolio:portfolio@localhost:5435/eco2mix"
+        run: python ingest.py --n 150
+
+      - name: dbt run + dbt test (staging + marts)
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: .
+          PGHOST: localhost
+          PGPORT: "5435"
+          PGUSER: portfolio
+          PGPASSWORD: portfolio
+          PGDATABASE: eco2mix
+          PGSSLMODE: prefer
+        run: |
+          dbt deps
+          dbt run
+          dbt test
