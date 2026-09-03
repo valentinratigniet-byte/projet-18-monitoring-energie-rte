@@ -62,6 +62,18 @@ l'analyse de données déjà là.
   10 gCO2/kWh sur la France début septembre 2026). CI ajoutée : seed
   Postgres local → ingestion réelle → `dbt run`/`dbt test`, rejoué à chaque
   push.
+- **Dashboard Metabase (vue ops)** — accès authentifié uniquement
+  (https://metabase-htoahsxbuxhcghbubjvkueqz.76.13.43.130.sslip.io/, compte
+  admin requis) : 5 cartes branchées sur les marts dbt (mix énergétique en
+  direct, pic de consommation par jour, comparaison J/J-7, taux CO2 actuel,
+  fraîcheur du pipeline via `ingestion_log`). Créé via l'API Metabase,
+  **chaque carte vérifiée non-vide** avant publication (requêtes rejouées).
+  ⚠️ **Pas de partage public** : la connexion Metabase→Supabase utilise le
+  rôle superuser (nécessaire pour dbt/administration), qui **contourne la
+  RLS** posée en Phase 3 — rendre ce dashboard public exposerait
+  `ingestion_log` (explicitement admin-only) à n'importe qui. Une éventuelle
+  vue publique devrait passer par une carte dédiée, connectée avec le rôle
+  `anon`/`authenticated`, pas par ce dashboard admin.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
