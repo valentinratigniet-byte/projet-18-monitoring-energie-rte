@@ -2,7 +2,9 @@
 
 [![CI](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml/badge.svg)](https://github.com/valentinratigniet-byte/projet-18-monitoring-energie-rte/actions/workflows/ci.yml)
 
-> **✅ Phase 7/7 — les 7 phases du cadrage sont terminées.** Cadrage complet dans l'issue
+> **✅ Phase 7/7 — les 7 phases du cadrage sont terminées.**
+> **[Démo live](https://valentinratigniet-byte.github.io/projet-18-monitoring-energie-rte/)** —
+> mix énergétique en direct, lecture seule, sans compte. Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -94,6 +96,19 @@ l'analyse de données déjà là.
   UTC, `refresh-eco2mix.yml` côté Filiation) : rescanne Supabase et
   republie le lignage tout seul — testé manuellement, un commit bot réel
   a suivi.
+- **Frontend public** — [démo live](https://valentinratigniet-byte.github.io/projet-18-monitoring-energie-rte/)
+  (`docs/index.html`, GitHub Pages, zéro dépendance) : lecture directe des
+  marts via l'API REST Supabase avec la clé **publique** (rôle `anon`) —
+  la même que celle testée en Phase 3, pas un accès élargi. Vérifié que
+  cette clé refuse toujours `ingestion_log` (401) avant publication.
+  Auto-rafraîchi toutes les 60 s.
+- **Alerting** (`freshness-check.yml`, toutes les 30 min) : `dbt source
+  freshness` sur `eco2mix_national_tr` — warn après 30 min sans nouvelle
+  ingestion, **échec du job** (visible dans Actions) après 60 min. Testé
+  avec un seuil artificiellement serré pour confirmer que le contrôle
+  échoue vraiment (pas juste "toujours vert").
+- **Hygiène** : mot de passe root du VPS tourné après plusieurs partages
+  en clair pendant le développement (vérifié fonctionnel après rotation).
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
@@ -133,16 +148,18 @@ projet-18-monitoring-energie-rte/
 ├── docker-compose.yml       ← Postgres local (dev), même schéma que la cible Supabase
 ├── sql/
 │   ├── 01_schema.sql        ← eco2mix_national_tr + ingestion_log (local + Supabase)
-│   └── 02_rls.sql           ← RLS + grants colonne (Supabase uniquement, rôles anon/authenticated)
+│   ├── 02_rls.sql           ← RLS + grants colonne (Supabase uniquement, rôles anon/authenticated)
+│   └── 03_public_marts.sql  ← grants des 3 marts au rôle anon (frontend public)
 ├── src/
 │   ├── ingest.py            ← poll API ODRE + upsert idempotent + log de chaque run
 │   └── test_rls.py          ← preuve RLS : SET ROLE anon/authenticated, 6 cas vérifiés
 ├── n8n/
 │   └── eco2mix-ingestion-workflow.json  ← workflow exporté (schedule 15min -> RTE -> Supabase)
 ├── dbt/
-│   ├── models/staging/stg_eco2mix.sql   ← exclut les mesures pas encore consolidées
+│   ├── models/staging/stg_eco2mix.sql   ← exclut les mesures pas encore consolidées, freshness
 │   └── models/marts/                    ← mix énergétique, pics quotidiens, comparaison J/J-7, dim_date
 └── docs/
+    ├── index.html           ← frontend public (GitHub Pages), lecture directe Supabase
     ├── pieges-api-rte.md    ← 2 comportements réels de l'API, vérifiés en direct
     └── pieges-infra.md      ← 3 problèmes infra réels (Coolify/IPv6/TLS), résolus
 ```
