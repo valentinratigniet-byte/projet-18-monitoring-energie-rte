@@ -32,4 +32,18 @@ CREATE TABLE eco2mix_national_tr (
     ingested_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ---------------------------------------------------------------------
+-- ingestion_log : un run de src/ingest.py = une ligne. Base de
+--   l'alerting fraîcheur (dernier run_at récent = pipeline sain) et
+--   réservée à l'admin en production (RLS, voir sql/02_rls.sql — les
+--   rôles anon/authenticated n'existent qu'côté Supabase, pas en local).
+-- ---------------------------------------------------------------------
+CREATE TABLE ingestion_log (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    run_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    rows_fetched   INT         NOT NULL,
+    status         TEXT        NOT NULL CHECK (status IN ('success', 'error')),
+    error_message  TEXT
+);
+
 COMMIT;

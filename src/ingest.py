@@ -54,14 +54,31 @@ def upsert(cur, rows: list) -> int:
     return len(rows)
 
 
+def log_run(cur, rows_fetched: int, status: str, error_message: str = None) -> None:
+    cur.execute(
+        "INSERT INTO ingestion_log (rows_fetched, status, error_message) VALUES (%s, %s, %s)",
+        (rows_fetched, status, error_message),
+    )
+
+
 def run(n: int = 8) -> int:
-    rows = fetch_latest(n)
+    """Chaque appel s'enregistre dans ingestion_log (visible admin seulement,
+    cf. sql/02_rls.sql) — succès ou échec, jamais silencieux."""
     conn = psycopg2.connect(DSN)
     cur = conn.cursor()
-    count = upsert(cur, rows)
-    conn.commit()
-    cur.close(); conn.close()
-    return count
+    try:
+        rows = fetch_latest(n)
+        count = upsert(cur, rows)
+        log_run(cur, count, "success")
+        conn.commit()
+        return count
+    except Exception as e:
+        conn.rollback()
+        log_run(cur, 0, "error", str(e)[:500])
+        conn.commit()
+        raise
+    finally:
+        cur.close(); conn.close()
 
 
 def row_count() -> int:

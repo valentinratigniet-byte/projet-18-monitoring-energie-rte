@@ -1,6 +1,6 @@
 # Projet 18 — Monitoring temps réel du mix énergétique (RTE Eco2mix)
 
-> **🚧 En cours — Phase 2/7.** Cadrage complet dans l'issue
+> **🚧 En cours — Phase 3/7.** Cadrage complet dans l'issue
 > [valentinratigniet-byte/valentinratigniet-byte#1](https://github.com/valentinratigniet-byte/valentinratigniet-byte/issues/1)
 > (architecture, comparatifs vs alternatives, chiffrage, doctrine
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
@@ -37,6 +37,13 @@ l'analyse de données déjà là.
   créé sur le vrai projet Supabase (pas seulement en local), et l'ingestion
   a tourné dessus avec succès (150 mesures, idempotence vérifiée) — même
   code que le local, seul `DATABASE_URL` change.
+- **RLS appliquée en base et testée avec les vrais rôles** (`sql/02_rls.sql`,
+  preuve dans `src/test_rls.py`) : rôle public (`anon`/`authenticated`) lit
+  les mesures mais pas les métadonnées d'ingestion ; `ingestion_log` (un run
+  = une ligne, sert de base à l'alerting fraîcheur) est invisible au public.
+  **6/6 cas vérifiés** en se plaçant réellement dans la peau de chaque rôle
+  (`SET ROLE`), pas juste déclaré — contrairement au Projet 11 où la
+  gouvernance n'était que documentée.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
@@ -69,9 +76,11 @@ projet-18-monitoring-energie-rte/
 ├── README.md
 ├── docker-compose.yml       ← Postgres local (dev), même schéma que la cible Supabase
 ├── sql/
-│   └── 01_schema.sql        ← table raw eco2mix_national_tr
+│   ├── 01_schema.sql        ← eco2mix_national_tr + ingestion_log (local + Supabase)
+│   └── 02_rls.sql           ← RLS + grants colonne (Supabase uniquement, rôles anon/authenticated)
 ├── src/
-│   └── ingest.py            ← poll API ODRE + upsert idempotent + self-check
+│   ├── ingest.py            ← poll API ODRE + upsert idempotent + log de chaque run
+│   └── test_rls.py          ← preuve RLS : SET ROLE anon/authenticated, 6 cas vérifiés
 └── docs/
     └── pieges-api-rte.md    ← 2 comportements réels de l'API, vérifiés en direct
 ```
