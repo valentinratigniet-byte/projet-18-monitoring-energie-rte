@@ -1,0 +1,37 @@
+name: Freshness check (alerting pipeline)
+
+# Contrôle que le pipeline d'ingestion n8n -> Supabase tourne toujours.
+# warn si la dernière ingestion date de plus de 30 min, error (job rouge)
+# si plus de 60 min — pour un poll toutes les 15 min, un pipeline sain ne
+# dépasse jamais ce seuil. Un job rouge dans Actions EST l'alerte : pas de
+# nouvelle intégration (Slack/email) pour un besoin déjà couvert par ce que
+# GitHub notifie déjà nativement sur un run planifié qui échoue.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install dbt-postgres
+
+      - name: dbt source freshness (échoue si le pipeline s'est arrêté)
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: .
+          PGHOST: aws-0-eu-west-2.pooler.supabase.com
+          PGPORT: "5432"
+          PGUSER: postgres.krvwcmzvpkrpihkrrwfb
+          PGPASSWORD: ${{ secrets.ECO2MIX_PGPASSWORD }}
+          PGDATABASE: postgres
+          PGSSLMODE: require
+        run: dbt source freshness
