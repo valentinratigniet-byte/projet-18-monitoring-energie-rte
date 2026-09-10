@@ -65,9 +65,9 @@ l'analyse de données déjà là.
   plausibles : ~53-59 % renouvelable, ~74-75 % nucléaire, 10 gCO2/kWh sur la
   France début septembre 2026). CI ajoutée : seed Postgres local → ingestion
   réelle → `dbt run`/`dbt test`, rejoué à chaque push.
-- **Dashboard Metabase (vue ops)** — accès authentifié uniquement
-  (https://metabase-htoahsxbuxhcghbubjvkueqz.76.13.43.130.sslip.io/, compte
-  admin requis) : 5 cartes branchées sur les marts dbt (mix énergétique en
+- **Dashboard Metabase (vue ops)** — accès authentifié uniquement (URL
+  volontairement non publiée ici, compte admin requis — voir plus bas
+  pourquoi) : 5 cartes branchées sur les marts dbt (mix énergétique en
   direct, pic de consommation par jour, comparaison J/J-7, taux CO2 actuel,
   fraîcheur du pipeline via `ingestion_log`). Créé via l'API Metabase,
   **chaque carte vérifiée non-vide** avant publication (requêtes rejouées).
