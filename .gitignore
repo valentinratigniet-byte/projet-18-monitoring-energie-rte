@@ -1,2 +1,5 @@
 __pycache__/
 .venv/
+
+# Sortie locale de /graphify (exploration perso, pas versionnee)
+graphify-out/
