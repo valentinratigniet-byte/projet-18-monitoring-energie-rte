@@ -10,6 +10,16 @@
 > d'ingénierie). Ce README documente ce qui est **réellement construit et
 > vérifié**, pas le plan — voir l'issue pour la roadmap complète.
 
+## 📸 Aperçu
+
+**Rapport Power BI — vue d'ensemble**
+
+![Rapport Power BI Eco2mix — vue d'ensemble](docs/images/dashboard-vue-ensemble.png)
+
+**Pics et comparaison J-7**
+
+![Rapport Power BI Eco2mix — pics et comparaison J-7](docs/images/dashboard-pics-j7.png)
+
 ## 🎯 Problème métier
 
 Suivre en direct la composition du mix électrique français (nucléaire,
@@ -85,8 +95,9 @@ l'analyse de données déjà là.
   hiérarchie Année/Trimestre/Mois/Jour explicite sur `dim_date` à la place
   des tables de dates auto-générées par Power BI (une par colonne, jamais
   réutilisables — supprimées). 2 pages : vue d'ensemble (mix en direct,
-  consommation, répartition) et pics/comparaison J-7. Thème "Petrol &
-  Ambre" du portfolio.
+  consommation, répartition) et pics/comparaison J-7. Charte "Petrol &
+  Ambre v2" du portfolio, mois en français (`dim_date[mois_court]`, `nom_mois`
+  étant en anglais).
 - **Lignage branché sur [Filiation](https://github.com/valentinratigniet-byte/projet-14-filiation)** :
   ce projet apparaît dans le jeu "Projet réel" de Filiation via 3 sources
   fusionnées de façon additive — Supabase (7 tables, `scan_database.py`),
@@ -144,7 +155,7 @@ dbt test
 ```
 projet-18-monitoring-energie-rte/
 ├── README.md
-├── dashboard-eco2mix.pbix   ← rapport Power BI (2 pages, thème Petrol & Ambre)
+├── dashboard-eco2mix.pbix   ← rapport Power BI (2 pages, charte Petrol & Ambre v2)
 ├── docker-compose.yml       ← Postgres local (dev), même schéma que la cible Supabase
 ├── sql/
 │   ├── 01_schema.sql        ← eco2mix_national_tr + ingestion_log (local + Supabase)
