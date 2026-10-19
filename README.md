@@ -123,6 +123,10 @@ l'analyse de données déjà là.
 
 ## 🗂️ Architecture (cible, cf. issue #1)
 
+![Schéma d'architecture](docs/architecture.png)
+
+**[Ouvrir le schéma interactif](https://valentinratigniet-byte.github.io/projet-18-monitoring-energie-rte/architecture.html)** (zoom, recherche, suivi des flux, export PNG/SVG). Généré avec [Archify](https://github.com/tt-a1i/archify) depuis [`docs/architecture.archify.json`](docs/architecture.archify.json).
+
 ```mermaid
 flowchart LR
     A["API ODRE Eco2mix"] --> B["n8n (Coolify/VPS)\nschedule 15 min"]

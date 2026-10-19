@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Monitoring mix énergétique RTE",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 610],
+    "legend": { "mode": "hidden" }
+  },
+  "stages": [
+    { "label": "Source" },
+    { "label": "Ingestion" },
+    { "label": "Stockage" },
+    { "label": "Transformation" },
+    { "label": "Restitution" }
+  ],
+  "nodes": [
+    { "id": "api", "type": "external", "label": "API ODRE", "sublabel": "Eco2mix temps réel", "stage": 0, "row": 1, "tag": "RTE" },
+    { "id": "n8n", "type": "messagebus", "label": "n8n", "sublabel": "toutes les 15 min", "stage": 1, "row": 1, "tag": "VPS Coolify" },
+    { "id": "supa", "type": "database", "label": "Supabase", "sublabel": "raw + ingestion_log", "stage": 2, "row": 1, "tag": "RLS", "brand": "supabase", "width": 150 },
+    { "id": "dbt", "type": "backend", "label": "dbt", "sublabel": "staging → 3 marts", "stage": 3, "row": 1, "tag": "+ dim_date" },
+    { "id": "powerbi", "type": "frontend", "label": "Power BI", "sublabel": "11 mesures DAX", "stage": 4, "row": 0, "tag": "exécutif" },
+    { "id": "front", "type": "frontend", "label": "Démo live", "sublabel": "GitHub Pages", "stage": 4, "row": 1, "tag": "public" },
+    { "id": "metabase", "type": "frontend", "label": "Metabase", "sublabel": "5 cartes", "stage": 4, "row": 2, "tag": "ops" },
+    { "id": "filiation", "type": "backend", "label": "Filiation", "sublabel": "rescan quotidien", "stage": 4, "row": 3, "tag": "lignage" }
+  ],
+  "flows": [
+    { "from": "api", "to": "n8n", "label": "JSON", "variant": "emphasis", "route": "straight" },
+    { "from": "n8n", "to": "supa", "label": "upsert", "variant": "emphasis", "route": "straight" },
+    { "from": "supa", "to": "dbt", "label": "mesures", "variant": "emphasis", "route": "straight" },
+    { "from": "dbt", "to": "front", "label": "REST anon", "variant": "security", "route": "straight" },
+    { "from": "dbt", "to": "powerbi", "label": "étoile", "variant": "default", "fromSide": "top", "toSide": "left", "via": [[745, 157]] },
+    { "from": "dbt", "to": "metabase", "label": "marts", "variant": "default", "fromSide": "bottom", "toSide": "left", "via": [[745, 385]] },
+    { "from": "supa", "to": "filiation", "label": "scan schéma", "variant": "dashed", "fromSide": "bottom", "toSide": "left", "via": [[530, 499]] }
+  ]
+}
