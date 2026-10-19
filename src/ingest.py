@@ -9,13 +9,18 @@ convention Lucene habituelle —
   sort=-date_heure  -> le plus ANCIEN en premier
 À revérifier si ODRE migre vers son API v2 (syntaxe différente).
 
+Les lignes les plus récentes de l'API sont des créneaux de prévision sans
+mesure (jusqu'à la fin du lendemain) : sans filtre, les N premières lignes
+ne contiennent jamais de vraie mesure. D'où `q=consommation>0`, qui ne
+renvoie que les mesures réelles (cf. docs/pieges-api-rte.md, piège n°3).
+
 Idempotent par construction (upsert sur la clé `date_heure`) : rejouer une
 même fenêtre de 15 min plusieurs fois (retry n8n, chevauchement de
 planning) ne crée jamais de doublon, et une correction ultérieure de RTE
 écrase la version précédente — le risque identifié dans le cadrage
 (issue #1) est traité dès cette première version, pas différé.
 
-Usage : python src/ingest.py [--n 8]
+Usage : python src/ingest.py [--n 16]
 """
 import argparse
 import os
@@ -32,8 +37,9 @@ COLUMNS = ["date_heure", "perimetre", "nature", "consommation", "eolien", "nucle
            "taux_co2", "ech_physiques"]
 
 
-def fetch_latest(n: int = 8) -> list:
-    resp = requests.get(API_URL, params={"dataset": DATASET, "rows": n, "sort": "date_heure"}, timeout=15)
+def fetch_latest(n: int = 16) -> list:
+    params = {"dataset": DATASET, "rows": n, "sort": "date_heure", "q": "consommation>0"}
+    resp = requests.get(API_URL, params=params, timeout=15)
     resp.raise_for_status()
     return [r["fields"] for r in resp.json()["records"]]
 
@@ -61,7 +67,7 @@ def log_run(cur, rows_fetched: int, status: str, error_message: str = None) -> N
     )
 
 
-def run(n: int = 8) -> int:
+def run(n: int = 16) -> int:
     """Chaque appel s'enregistre dans ingestion_log (visible admin seulement,
     cf. sql/02_rls.sql) — succès ou échec, jamais silencieux."""
     conn = psycopg2.connect(DSN)
@@ -91,7 +97,7 @@ def row_count() -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n", type=int, default=8, help="nombre de dernières mesures à récupérer")
+    parser.add_argument("--n", type=int, default=16, help="nombre de dernières mesures à récupérer")
     args = parser.parse_args()
 
     fetched = run(args.n)

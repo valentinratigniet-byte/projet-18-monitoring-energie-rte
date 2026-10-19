@@ -1,0 +1,35 @@
+name: Rattrapage des mesures (manuel)
+
+# Lancement à la main uniquement : réinjecte les N dernières mesures réelles
+# de l'API RTE dans Supabase (upsert idempotent, sans doublon). Sert après
+# une panne de collecte, comme celle du 02/10 au 19/10/2026.
+
+on:
+  workflow_dispatch:
+    inputs:
+      n:
+        description: "Nombre de mesures à rattraper (96 = 1 jour)"
+        default: "2000"
+
+jobs:
+  rattrapage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Upsert des mesures dans Supabase
+        env:
+          DATABASE_URL: ""  # chaîne vide : psycopg2 se connecte avec les variables PG* ci-dessous
+          PGHOST: aws-0-eu-west-2.pooler.supabase.com
+          PGPORT: "5432"
+          PGUSER: postgres.krvwcmzvpkrpihkrrwfb
+          PGPASSWORD: ${{ secrets.ECO2MIX_PGPASSWORD }}
+          PGDATABASE: postgres
+          PGSSLMODE: require
+        run: python src/ingest.py --n ${{ inputs.n }}

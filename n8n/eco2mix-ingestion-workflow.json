@@ -41,11 +41,15 @@
             },
             {
               "name": "rows",
-              "value": "8"
+              "value": "16"
             },
             {
               "name": "sort",
               "value": "date_heure"
+            },
+            {
+              "name": "q",
+              "value": "consommation>0"
             }
           ]
         },

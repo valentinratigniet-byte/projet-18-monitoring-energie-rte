@@ -10,10 +10,16 @@ sources:
           15 min par le workflow n8n (voir ../../n8n/eco2mix-ingestion-workflow.json).
           Une partie des lignes récentes (~24h) n'ont pas encore de mesure
           consolidée par RTE — voir docs/pieges-api-rte.md à la racine du repo.
-        loaded_at_field: ingested_at
+        # Fraîcheur mesurée sur la dernière VRAIE mesure, pas sur la date
+        # d'écriture : le 19/10/2026, le pipeline réécrivait toutes les
+        # 15 min des créneaux de prévision vides (ingested_at toujours
+        # récent, contrôle vert) alors qu'aucune mesure n'arrivait depuis
+        # le 02/10. Seuils larges : RTE consolide avec un délai variable.
+        loaded_at_field: date_heure
         freshness:
-          warn_after: {count: 30, period: minute}
-          error_after: {count: 60, period: minute}
+          warn_after: {count: 2, period: hour}
+          error_after: {count: 6, period: hour}
+          filter: consommation is not null
         columns:
           - name: date_heure
             description: Horodatage de la mesure (clé, UTC)

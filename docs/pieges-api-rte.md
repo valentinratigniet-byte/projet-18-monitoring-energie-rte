@@ -39,3 +39,26 @@ explicitement dans le README/dashboard plutôt que cacher — la courbe des
 dernières ~24h affichera des trous ou des valeurs de prévision tant que RTE
 n'a pas consolidé, ce qui est le comportement réel de la source, pas un bug
 du pipeline.
+
+## 3. Les premières lignes de l'API sont des créneaux sans mesure (panne du 02/10 au 19/10/2026)
+
+Le 19/10/2026, l'API publiait des créneaux jusqu'au **20/10 21:45**, tous sans
+`consommation` : les créneaux du lendemain, en prévision. La dernière vraie
+mesure datait du 19/10 18:30. Le workflow n8n demandait les **8 premières
+lignes** : il ne récupérait que des créneaux vides, et le tableau de bord est
+resté figé sur la dernière mesure reçue, le 02/10 05:30 (le moment exact de
+la rupture n'est pas connu sans le journal `ingestion_log`).
+
+**L'alerte n'a rien vu** : le contrôle de fraîcheur portait sur `ingested_at`,
+la date d'écriture, que chaque upsert de lignes vides remettait à jour.
+
+**Corrigé** :
+- l'API est interrogée avec `q=consommation>0` (16 lignes) : elle ne renvoie
+  que des mesures réelles, quel que soit l'horizon des prévisions ;
+- la fraîcheur dbt porte sur `date_heure` des lignes où `consommation` est
+  renseignée (alerte à 2 h, échec à 6 h) : ce qu'on veut savoir, c'est si des
+  mesures arrivent, pas si on écrit ;
+- le trou a été comblé par le workflow manuel `rattrapage.yml` (2 000 mesures).
+
+Leçon : une alerte doit surveiller le résultat attendu (des mesures récentes),
+pas l'activité du pipeline (des écritures récentes).
