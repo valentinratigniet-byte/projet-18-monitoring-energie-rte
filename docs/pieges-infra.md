@@ -1,6 +1,6 @@
 # Pièges infra rencontrés (VPS/Coolify/n8n/Supabase) — 2026-09-03
 
-Trois problèmes réels, chacun avec sa cause exacte identifiée avant
+Quatre problèmes réels, chacun avec sa cause exacte identifiée avant
 correction (pas de solution appliquée à l'aveugle).
 
 ## 1. HTTPS Coolify : le formulaire "Domains" ne persiste pas toujours
@@ -55,3 +55,25 @@ retard ou différente sur ce point précis pour ce champ.
 non documentée sur un champ précis, basculer sur l'UI plutôt que de
 multiplier les tentatives à l'aveugle — l'UI est toujours la source de
 vérité la plus à jour du schéma réel.
+
+## 4. n8n : enregistrer un workflow actif ne change pas la version qui tourne (panne du 19/10 au 23/10/2026)
+
+Après la correction du piège n°3 de `pieges-api-rte.md` (paramètres `rows=16`
+et `q=consommation>0` ajoutés au nœud « Fetch RTE Eco2mix »), l'éditeur
+affichait bien les nouveaux paramètres et les exécutions planifiées restaient
+vertes toutes les 15 min, mais aucune nouvelle mesure n'arrivait en base et le
+contrôle de fraîcheur échouait.
+
+Cause : dans les versions récentes de n8n, enregistrer un workflow actif ne
+crée qu'un **brouillon**. Les exécutions de production continuent d'utiliser
+la dernière version **publiée**, ici encore l'ancienne (8 lignes, sans
+filtre), qui ne récupérait que des créneaux de prévision vides et les écrivait
+sans erreur.
+
+**Solution** : cliquer sur **Publish** dans l'éditeur, puis relancer
+`rattrapage.yml` pour combler le trou (322 mesures le 23/10).
+
+**Leçon** : une exécution verte prouve seulement que le workflow n'a pas
+planté. Pour vérifier qu'une modification est en production, ouvrir une
+exécution récente et lire les paramètres réellement envoyés par le nœud,
+plutôt que l'éditeur.
