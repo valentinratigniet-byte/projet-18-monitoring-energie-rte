@@ -3,3 +3,9 @@ __pycache__/
 
 # Sortie locale de /graphify (exploration perso, pas versionnee)
 graphify-out/
+
+# Reçus de contrôle Archify
+docs/*.finalize.json
+docs/*.finalize-summary.json
+docs/*.delivery.json
+docs/*.browser-check.json
